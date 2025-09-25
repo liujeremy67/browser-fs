@@ -1,4 +1,4 @@
-# Mini OS Backend Notes
+# Backend Notes
 
 ## 1. TypeScript Basics
 
