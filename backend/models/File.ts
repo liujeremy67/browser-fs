@@ -1,6 +1,8 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document, Model } from "mongoose";
+import { Types } from "mongoose";
 
 export interface IFile extends Document {
+  _id: Types.ObjectId; // make sure _id is explicitly typed
   userId: mongoose.Types.ObjectId;
   name: string;
   type: "file" | "folder";
