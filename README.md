@@ -1,106 +1,75 @@
-TypeScript Basics for Backend
+# Mini OS Backend Notes
 
-- Type annotations help catch errors at compile time:
+## 1. TypeScript Basics
 
-let name: string = "Jeremy";
-let age: number = 25;
-Use | to indicate multiple possible types:
+- TypeScript adds **static typing** to JavaScript, which helps catch errors during development before running the code.
+- Variables, function parameters, and function returns can all be typed.
+- Union types allow a variable to hold multiple possible types.
+- Interfaces are used to define the **shape of an object**, similar to structs in C++.
+- TypeScript types help ensure functions are called with correct data and help IDEs give better autocomplete suggestions.
 
-ts
-Copy code
-let id: string | Types.ObjectId;
-Interfaces describe object shapes (like C++ structs):
+---
 
-ts
-Copy code
-interface IUser {
-  username: string;
-  passwordHash: string;
-}
-2. Mongoose Models and Documents
-Schema defines rules for MongoDB documents:
+## 2. Mongoose Models and Documents
 
-ts
-Copy code
-const UserSchema = new mongoose.Schema<IUser>({
-  username: { type: String, required: true, unique: true },
-  passwordHash: { type: String, required: true },
-});
-Model is like a class in C++: used to query/create documents:
+- A **schema** defines the structure and rules for documents in a MongoDB collection.
+- A **model** is a constructor compiled from the schema. It is like a class in C++ that allows creating, reading, updating, and deleting documents.
+- A **document** is an instance of a model, similar to an object created from a class.
+- Models and documents provide an abstraction layer over the database, making CRUD operations easier to manage.
 
-ts
-Copy code
-const User = mongoose.model<IUser>("User", UserSchema);
-Document is an instance of a model (like an object):
+---
 
-ts
-Copy code
-const newUser = new User({ username: "jeremy", passwordHash: "hash" });
-await newUser.save();
-3. Handling IDs
-MongoDB documents have _id of type ObjectId.
+## 3. Handling IDs
 
-In TypeScript, explicitly type _id in your interface:
+- MongoDB automatically assigns each document a unique `_id` of type ObjectId.
+- TypeScript can explicitly type `_id` in interfaces to help with type checking.
+- Functions that manipulate documents often require `_id` values. Union types (`string | ObjectId`) are useful because sometimes IDs come as strings and sometimes as ObjectIds.
+- Casting can be used when TypeScript cannot infer the correct type.
 
-ts
-Copy code
-_id: Types.ObjectId;
-When passing _id to functions that expect string | Types.ObjectId, cast if needed:
+---
 
-ts
-Copy code
-deleteRecursive(child._id as Types.ObjectId, userId);
-4. Async Functions and Promises
-async functions always return a Promise, even if you don’t explicitly return a value:
+## 4. Async Functions and Promises
 
-ts
-Copy code
-async function deleteRecursive(...): Promise<void> { ... }
-await pauses the function until a Promise resolves:
+- `async` functions are functions that perform asynchronous operations and always return a **Promise**, even if they don't return a value explicitly.
+- `await` is used inside async functions to pause execution until a Promise resolves.
+- Returning a Promise allows the caller to wait for an operation to complete before proceeding, similar to `std::future` in C++.
+- Without `async`/`await` or Promises, asynchronous operations would not complete in order, causing potential bugs, especially with recursive operations.
 
-ts
-Copy code
-const children: IFile[] = await File.find({ parentId: fileId });
-Promise<void> is like std::future<void> in C++: you wait for the async operation, even if it doesn’t return anything.
+---
 
-5. Recursive Operations Example (Deleting a Folder Tree)
-Recursive deletion uses DFS pattern:
+## 5. Recursive Operations
 
-Find all child files/folders
+- Recursive functions are often used to traverse hierarchical data, such as folder trees.
+- Recursive deletion of folders works by first finding all children of a folder, recursively deleting each child, and finally deleting the folder itself.
+- Using `await` in recursive functions ensures that all child deletions complete before the parent is deleted.
+- This pattern ensures data integrity and avoids leaving orphaned documents in the database.
 
-Recursively delete each child
+---
 
-Delete the parent folder/file itself
+## 6. Key Takeaways
 
-ts
-Copy code
-export async function deleteRecursive(
-  fileId: Types.ObjectId | string,
-  userId: Types.ObjectId | string
-): Promise<void> {
-  const children: IFile[] = await File.find({ parentId: fileId, userId });
-  for (const child of children) {
-    await deleteRecursive(child._id as Types.ObjectId, userId);
-  }
-  await File.deleteOne({ _id: fileId, userId });
-}
-6. Key Takeaways
-TypeScript types everything, even IDs and DB results → safer than plain JS.
+- TypeScript provides **compile-time safety**, making it easier to reason about data and function behavior.
+- Mongoose models and documents act like **classes and objects** in C++, providing structure over raw database operations.
+- Always handle IDs carefully, using the appropriate type and casting when necessary.
+- Async programming requires understanding Promises and `await` to maintain correct execution order.
+- Recursive operations with async need careful handling to avoid race conditions and ensure all steps complete in order.
 
-interface = compile-time object shape, model = runtime class, document = runtime object.
+---
 
-Always use Promise / async when calling async DB operations.
+## 7. C++ Analogies
 
-Cast types when TS can’t infer them (as Types.ObjectId).
+- **TypeScript variable types** = C++ variable types (number → int/float, string → std::string)
+- **Interface** = C++ struct
+- **Model** = C++ class
+- **Document** = C++ object
+- **Promise<void>** = `std::future<void>` (represents a result that will be available later)
+- **await** = `future.get()` (wait for asynchronous operation to complete)
 
-Recursive functions with async require await to ensure order.
+---
 
-7. Quick C++ Analogy Table
-TypeScript	C++ Analogy	Notes
-number	int/float	Basic types
-string	std::string	Basic types
-interface IUser	struct User	Compile-time shape
-User (model)	class User	Runtime blueprint
-IFile[]	std::vector<Node*>	Array of objects
-Promise<void>	std::future<void>	Async operation result
-await	future.get()	Wait for async operation
+**Tips for Working with the Mini OS Backend**
+
+- Think of TypeScript as **C++ with runtime flexibility**.
+- Treat Mongoose models like classes that manage database objects.
+- Be deliberate with async functions and recursive operations — always ensure proper ordering with `await`.
+- Document shapes and types help prevent subtle bugs, especially when working with hierarchical structures like folders and files.
